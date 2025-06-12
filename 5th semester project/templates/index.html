@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4 text-center text-primary">Inventory Management System</h1>
+
+    <!-- Search Form -->
+    <form method="get" action="/" class="mb-3">
+        <input type="text" name="search" placeholder="Search by name..." class="form-control" value="{{ request.args.get('search', '') }}">
+    </form>
+
+    <!-- Total Inventory Value -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">Total Inventory Value</div>
+        <div class="card-body">
+            <p>Total Value: ₹{{ "%.2f"|format(total_value) }}</p>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if low_stock_items %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">Low Stock Alert</div>
+        <div class="card-body">
+            <ul>
+                {% for item in low_stock_items %}
+                    <li>{{ item[1] }} ({{ item[2] }} {{ item[5] }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Expiring Soon Highlight -->
+    {% if expiring_soon %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">Expiring Soon</div>
+        <div class="card-body">
+            <ul>
+                {% for item in expiring_soon %}
+                    <li>{{ item[1] }} (Expiry Date: {{ item[4] }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Form to Add New Item -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Add New Item</div>
+        <div class="card-body">
+            <form action="/add" method="post" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="name" class="form-control" placeholder="Item Name" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="quantity" class="form-control" placeholder="Quantity" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="unit" class="form-control" placeholder="Unit (kg, pcs, etc)" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" name="price" class="form-control" placeholder="Price" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="expiry_date" class="form-control">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-success w-100">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">Current Inventory</div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Price</th>
+                        <th>Expiry Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    <tr 
+                        {% if item in expiring_soon %}class="table-danger"{% endif %}
+                        {% if item in low_stock_items %}class="table-warning"{% endif %}>
+                        <td>{{ item[0] }}</td>
+                        <td>{{ item[1] }}</td>
+                        <td>{{ item[2] }}</td>
+                        <td>{{ item[5] or '-' }}</td>
+                        <td>₹{{ "%.2f"|format(item[3]) }}</td>
+                        <td>{{ item[4] or '-' }}</td>
+                        <td>
+                            <a href="/sell/{{ item[0] }}" class="btn btn-sm btn-warning me-1 {% if item[2] == 0 %}disabled{% endif %}">Sell</a>
+                            <a href="/edit/{{ item[0] }}" class="btn btn-sm btn-info me-1">Edit</a>
+                            <a href="/delete/{{ item[0] }}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/report" class="btn btn-outline-primary">📊 View Report</a>
+    </div>
+</div>
+</body>
+</html>
